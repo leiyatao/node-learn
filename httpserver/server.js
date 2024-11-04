@@ -24,7 +24,13 @@ connection.connect((err) => {
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'views')));
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// 提供 HTML 页面
+app.get('/css3', (req, res) => {
+    res.render('css3')
+});
 
 // 提供 HTML 页面
 app.get('/', (req, res) => {
