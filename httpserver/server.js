@@ -36,6 +36,7 @@ app.get('/css3', (req, res) => {
 app.get('/', (req, res) => {
     connection.query('SELECT * FROM users', (error, results) => {
         if (error) {
+            console.error('数据库查询错误:'+error);
             return res.status(500).send('数据库查询错误');
         }
         res.render('index', { users: results }); // 渲染页面并传递用户数据
