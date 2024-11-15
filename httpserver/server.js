@@ -13,7 +13,7 @@ const pool = mysql.createPool({
     password: 'root',  // 替换为你的 MySQL 密码
     database: 'test',
     connectTimeout: 10000,  // 设置连接超时时间（单位：毫秒）
-    acquireTimeout: 10000,  // 设置获取连接的超时时间
+  //  acquireTimeout: 10000,  // 设置获取连接的超时时间
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
