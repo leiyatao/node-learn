@@ -2,16 +2,27 @@ const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const path = require('path');
-
+// 加载 .env 文件
+require('dotenv').config();
+const axios = require('axios');
 const app = express();
 const PORT = 3000;
 
+const appid=process.env.APPID
+const appsecret=process.env.SECRET
+const dbhost=process.env.DB_HOST
+const dbuser=process.env.DB_USER  // 替换为你的 MySQL 用户名
+const dbpass=process.env.DB_PASS // 替换为你的 MySQL 密码
+const dbname=process.env.DB_NAME
+console.log(dbhost,appid)
+
+
 // MySQL 连接设置
 const pool = mysql.createPool({
-    host: '192.168.229.26',
-    user: 'root',  // 替换为你的 MySQL 用户名
-    password: 'root',  // 替换为你的 MySQL 密码
-    database: 'test',
+    host: dbhost,
+    user: dbuser,  // 替换为你的 MySQL 用户名
+    password: dbpass,  // 替换为你的 MySQL 密码
+    database: dbname,
     connectTimeout: 10000,  // 设置连接超时时间（单位：毫秒）
   //  acquireTimeout: 10000,  // 设置获取连接的超时时间
     waitForConnections: true,
@@ -78,11 +89,33 @@ app.post('/api/add/users', async (req, res) => {
 app.get('/api/users/list', async (req, res) => {
   try {
     const [rows, fields] = await promisePool.query('SELECT * FROM users');
+
     return res.status(200).send({ users: rows }); // 渲染页面并传递用户数据
   } catch (error) {
     console.error('数据库查询错误:', error.message);
     res.status(500).send('数据库查询错误');
   }
+});
+//获取用户openId
+app.get('/api/users/getOpenId', async (req, res) => {
+
+    const js_code=req.query.js_code;
+    console.log(req.query.js_code);
+    console.log(appid);
+    console.log(appsecret);
+    console.log(js_code);
+    const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appid}&secret=${appsecret}&grant_type=authorization_code&js_code=${js_code}`;
+    // 使用 axios 发起 GET 请求
+      axios.get(url)
+        .then((response) => {
+          console.log(response.data);  // 打印响应内容
+          // 你可以在这里处理返回的数据，例如获取 openid
+          return res.status(200).send({ data:response.data }); // 渲染页面并传递用户数据
+        })
+        .catch((error) => {
+          console.error('请求错误:', error);
+        });
+  
 });
 
 // 启动服务器
