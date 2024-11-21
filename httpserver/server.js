@@ -26,7 +26,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'views')));
 app.use(bodyParser.urlencoded({ extended: true }));
-
+// 使用 express 自带的 JSON 解析中间件
+app.use(express.json());  // 解析 JSON 格式的请求体
+app.use(express.urlencoded({ extended: true })); // 解析表单请求（urlencoded）
 // 提供 HTML 页面
 app.get('/css3', (req, res) => {
     res.render('css3')
@@ -56,6 +58,31 @@ app.post('/api/users', async (req, res) => {
         console.error('插入错误: ' + error.stack);
         return res.status(500).send('插入错误');
     }
+});
+
+
+// 处理 POST 请求
+app.post('/api/add/users', async (req, res) => {
+  const { name, age } = req.body; // 获取请求体数据
+  const query = 'INSERT INTO users (name, age) VALUES (?, ?)';
+  
+  try {
+      // 使用 Promise 来执行数据库插入
+      const [results] = await promisePool.query(query, [name, age]);
+      return res.status(200).send({'code':0,'message':'插入成功'});
+  } catch (error) {
+      console.error('插入错误: ' + error.stack);
+      return res.status(500).send('插入错误');
+  }
+});
+app.get('/api/users/list', async (req, res) => {
+  try {
+    const [rows, fields] = await promisePool.query('SELECT * FROM users');
+    return res.status(200).send({ users: rows }); // 渲染页面并传递用户数据
+  } catch (error) {
+    console.error('数据库查询错误:', error.message);
+    res.status(500).send('数据库查询错误');
+  }
 });
 
 // 启动服务器
