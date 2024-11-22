@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql2');
+
 const bodyParser = require('body-parser');
 const path = require('path');
 // 加载 .env 文件
@@ -7,31 +7,16 @@ require('dotenv').config();
 const axios = require('axios');
 const app = express();
 const PORT = 3000;
+const promisePool = require('./dbutil'); // 引入数据库连接池
+
+
 
 const appid=process.env.APPID
 const appsecret=process.env.SECRET
-const dbhost=process.env.DB_HOST
-const dbuser=process.env.DB_USER  // 替换为你的 MySQL 用户名
-const dbpass=process.env.DB_PASS // 替换为你的 MySQL 密码
-const dbname=process.env.DB_NAME
-console.log(dbhost,appid)
+
+console.log(appid)
 
 
-// MySQL 连接设置
-const pool = mysql.createPool({
-    host: dbhost,
-    user: dbuser,  // 替换为你的 MySQL 用户名
-    password: dbpass,  // 替换为你的 MySQL 密码
-    database: dbname,
-    connectTimeout: 10000,  // 设置连接超时时间（单位：毫秒）
-  //  acquireTimeout: 10000,  // 设置获取连接的超时时间
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
-// 使用 promise() 获取数据库连接池
-const promisePool = pool.promise();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -71,7 +56,6 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
-
 // 处理 POST 请求
 app.post('/api/add/users', async (req, res) => {
   const { name, age } = req.body; // 获取请求体数据
@@ -86,6 +70,7 @@ app.post('/api/add/users', async (req, res) => {
       return res.status(500).send('插入错误');
   }
 });
+// 查询用户列表
 app.get('/api/users/list', async (req, res) => {
   try {
     const [rows, fields] = await promisePool.query('SELECT * FROM users');
