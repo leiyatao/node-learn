@@ -8,6 +8,7 @@ const axios = require('axios');
 const app = express();
 const PORT = 3000;
 const promisePool = require('./dbutil'); // 引入数据库连接池
+require('./api/user');
 
 
 
@@ -33,7 +34,7 @@ app.get('/css3', (req, res) => {
 // 提供 HTML 页面
 app.get('/', async (req, res) => {
     try {
-      const [rows, fields] = await promisePool.query('SELECT * FROM users');
+      const [rows, fields] = await promisePool.query('SELECT id,name,email,create_date FROM wx_users');
       res.render('index', { users: rows }); // 渲染页面并传递用户数据
     } catch (error) {
       console.error('数据库查询错误:', error.message);
@@ -59,7 +60,7 @@ app.post('/api/users', async (req, res) => {
 // 处理 POST 请求
 app.post('/api/add/users', async (req, res) => {
   const { name, age } = req.body; // 获取请求体数据
-  const query = 'INSERT INTO users (name, age) VALUES (?, ?)';
+  const query = 'INSERT INTO wx_users (name, age) VALUES (?, ?)';
   
   try {
       // 使用 Promise 来执行数据库插入
@@ -73,7 +74,7 @@ app.post('/api/add/users', async (req, res) => {
 // 查询用户列表
 app.get('/api/users/list', async (req, res) => {
   try {
-    const [rows, fields] = await promisePool.query('SELECT * FROM users');
+    const [rows, fields] = await promisePool.query('SELECT * FROM wx_users');
 
     return res.status(200).send({ users: rows }); // 渲染页面并传递用户数据
   } catch (error) {
@@ -81,6 +82,43 @@ app.get('/api/users/list', async (req, res) => {
     res.status(500).send('数据库查询错误');
   }
 });
+// 分页查询用户列表
+app.get('/api/users/listPage', async (req, res) => {
+  try {
+    // 从请求参数中获取页码和每页显示的记录数，默认为第一页和10条数据
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    console.log("page:"+page,"pageSize:"+pageSize)
+    // 计算偏移量
+    const offset = (page - 1) * pageSize;
+
+    // 查询总数，用于计算总页数
+    const [totalRows] = await promisePool.query('SELECT COUNT(*) AS total FROM wx_users');
+    console.log(totalRows)
+    // 根据分页参数查询数据
+    const [rows] = await promisePool.query(
+      'SELECT id,name,email,create_date FROM wx_users LIMIT ? OFFSET ?', 
+      [pageSize, offset]
+    );
+
+    // 计算总页数
+    const total = totalRows[0].total;
+    const totalPages = Math.ceil(total / pageSize);
+
+    return res.status(200).send({
+      users: rows,      // 当前页的用户数据
+      page,             // 当前页码
+      pageSize,         // 每页显示的数据条数
+      total,            // 总数据条数
+      totalPages       // 总页数
+    });
+  } catch (error) {
+    console.error('数据库查询错误:', error.message);
+    res.status(500).send('数据库查询错误');
+  }
+});
+
 //获取用户openId
 app.get('/api/users/getOpenId', async (req, res) => {
 
@@ -100,8 +138,28 @@ app.get('/api/users/getOpenId', async (req, res) => {
         .catch((error) => {
           console.error('请求错误:', error);
         });
-  
 });
+
+//用户注册
+app.post('/api/user/register', async (req, res) => {
+  const { name, pass,email } = req.body; // 获取请求体数据
+  console.log('name:'+name)
+  console.log('pass:'+pass)
+  console.log('email:'+email)
+  const query = 'insert into wx_users(name,email,pass) values(?,?,md5(?))';
+  
+  try {
+      // 使用 Promise 来执行数据库插入
+      const [results] = await promisePool.query(query, [name ,email,pass]);
+      return res.status(200).send({'code':0,'message':'插入成功'});
+  } catch (error) {
+      console.error('插入错误: ' + error.stack);
+      return res.status(500).send('插入错误');
+  }
+});
+
+
+
 
 // 启动服务器
 app.listen(PORT, () => {
