@@ -98,7 +98,7 @@ app.get('/api/users/listPage', async (req, res) => {
     console.log(totalRows)
     // 根据分页参数查询数据
     const [rows] = await promisePool.query(
-      'SELECT id,name,email,create_date FROM wx_users LIMIT ? OFFSET ?', 
+      'SELECT id,name,email,create_date FROM wx_users ORDER BY create_date DESC LIMIT ? OFFSET ?', 
       [pageSize, offset]
     );
 
@@ -141,7 +141,7 @@ app.get('/api/users/getOpenId', async (req, res) => {
 });
 
 //用户注册
-app.post('/api/user/register', async (req, res) => {
+app.post('/api/users/register', async (req, res) => {
   const { name, pass,email } = req.body; // 获取请求体数据
   console.log('name:'+name)
   console.log('pass:'+pass)
