@@ -44,12 +44,12 @@ app.get('/', async (req, res) => {
 
 // 处理 POST 请求
 app.post('/api/users', async (req, res) => {
-    const { name, age } = req.body; // 获取请求体数据
-    const query = 'INSERT INTO users (name, age) VALUES (?, ?)';
+    const { name, pass ,email} = req.body; // 获取请求体数据
+    const query = 'INSERT INTO wx_users (name, email,pass) VALUES (?, ?,?)';
     
     try {
         // 使用 Promise 来执行数据库插入
-        const [results] = await promisePool.query(query, [name, age]);
+        const [results] = await promisePool.query(query, [name, email,pass]);
         res.redirect('/'); // 插入成功后重定向到主页
     } catch (error) {
         console.error('插入错误: ' + error.stack);
@@ -59,12 +59,12 @@ app.post('/api/users', async (req, res) => {
 
 // 处理 POST 请求
 app.post('/api/add/users', async (req, res) => {
-  const { name, age } = req.body; // 获取请求体数据
-  const query = 'INSERT INTO wx_users (name, age) VALUES (?, ?)';
+  const { name, email,pass } = req.body; // 获取请求体数据
+  const query = 'INSERT INTO wx_users (name, email,pass) VALUES (?, ?)';
   
   try {
       // 使用 Promise 来执行数据库插入
-      const [results] = await promisePool.query(query, [name, age]);
+      const [results] = await promisePool.query(query, [name, email,pass]);
       return res.status(200).send({'code':0,'message':'插入成功'});
   } catch (error) {
       console.error('插入错误: ' + error.stack);
